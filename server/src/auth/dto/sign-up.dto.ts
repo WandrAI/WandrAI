@@ -5,6 +5,12 @@ export class SignUpDto{
     username:string;
     @IsEmail()
     email:string;
-    @IsStrongPassword()
+    @IsStrongPassword({
+        minLength: 8,
+        minLowercase: 1,
+        minUppercase: 0, 
+        minNumbers: 1,
+        minSymbols: 0,
+    })
     password:string;
 }

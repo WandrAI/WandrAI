@@ -7,6 +7,7 @@ import {SignInDto} from "./dto/sign-in.dto.js";
 import {SignInResponseDto} from "./dto/sign-in-response.dto.js";
 import {SignUpDto} from "./dto/sign-up.dto.js";
 import {User} from "../generated/prisma/client.js";
+import "dotenv/config"
 
 @Injectable()
 export class AuthService {
@@ -19,8 +20,9 @@ export class AuthService {
         const isPasswordValid = await bcrypt.compare(data.password,user.password)
         if(!isPasswordValid) throw new UnauthorizedException("Invalid password")
 
-        return this.createToken(user)
+        return this.createTokens(user)
     }
+
     async SignUp(data:SignUpDto) {
 
         const checkUser = await this.user.getUserByEmail(data.email)
@@ -35,17 +37,17 @@ export class AuthService {
         }
 
             const createdUser = await this.user.createUser(User)
-            return this.createToken(createdUser)
+            return this.createTokens(createdUser)
 
     }
-    async createToken(user:User){
+    async createTokens(user:User){
         const payload = {
             id:user.id,
             username:user.username,
             email:user.email
         }
-        const accessToken = await this.jwtService.signAsync(payload)
-
-        return new SignInResponseDto(accessToken,'refresh-token')
+        const access_token = await this.jwtService.signAsync(payload)
+        const refresh_token = await this.jwtService.signAsync(payload,{expiresIn:'7d',secret:process.env["JWT_REFRESH_SECRET"]})
+        return {access_token:access_token,refresh_token:refresh_token}
     }
 }
